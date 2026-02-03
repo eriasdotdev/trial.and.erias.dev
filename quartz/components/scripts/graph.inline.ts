@@ -673,6 +673,14 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   })
 
   const containers = [...document.getElementsByClassName("global-graph-outer")] as HTMLElement[]
+  const globalConfigs = new Map<HTMLElement, string>()
+  containers.forEach(outer => {
+    const graphContainer = outer.querySelector(".global-graph-container") as HTMLElement
+    if (graphContainer && graphContainer.dataset["cfg"]) {
+      globalConfigs.set(graphContainer, graphContainer.dataset["cfg"])
+    }
+  })
+
   async function renderGlobalGraph() {
     const slug = getFullSlug(window)
     for (const container of containers) {
@@ -683,6 +691,40 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
       }
 
       const graphContainer = container.querySelector(".global-graph-container") as HTMLElement
+      // Reset to global config
+      if (graphContainer && globalConfigs.has(graphContainer)) {
+        graphContainer.dataset["cfg"] = globalConfigs.get(graphContainer)
+      }
+
+      registerEscapeHandler(container, hideGlobalGraph)
+      if (graphContainer) {
+        globalGraphCleanups.push(await renderGraph(graphContainer, slug))
+      }
+    }
+  }
+
+  async function renderExpandedGraph(e: Event) {
+    const slug = getFullSlug(window)
+    const icon = e.currentTarget as HTMLElement
+    const graphOuter = icon.closest(".graph-outer")
+    if (!graphOuter) return
+    const localContainer = graphOuter.querySelector(".graph-container") as HTMLElement
+    if (!localContainer || !localContainer.dataset["cfg"]) return
+    const localCfg = localContainer.dataset["cfg"]
+
+    for (const container of containers) {
+      container.classList.add("active")
+      const sidebar = container.closest(".sidebar") as HTMLElement
+      if (sidebar) {
+        sidebar.style.zIndex = "1"
+      }
+
+      const graphContainer = container.querySelector(".global-graph-container") as HTMLElement
+      // Set to local config
+      if (graphContainer) {
+        graphContainer.setAttribute("data-cfg", localCfg)
+      }
+
       registerEscapeHandler(container, hideGlobalGraph)
       if (graphContainer) {
         globalGraphCleanups.push(await renderGraph(graphContainer, slug))
@@ -715,6 +757,12 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   Array.from(containerIcons).forEach((icon) => {
     icon.addEventListener("click", renderGlobalGraph)
     window.addCleanup(() => icon.removeEventListener("click", renderGlobalGraph))
+  })
+
+  const expandIcons = document.getElementsByClassName("expand-graph-icon")
+  Array.from(expandIcons).forEach((icon) => {
+    icon.addEventListener("click", renderExpandedGraph)
+    window.addCleanup(() => icon.removeEventListener("click", renderExpandedGraph))
   })
 
   document.addEventListener("keydown", shortcutHandler)
