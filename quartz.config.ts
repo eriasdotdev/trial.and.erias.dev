@@ -27,38 +27,38 @@ const config: QuartzConfig = {
         body: "Source Sans Pro",
         code: "IBM Plex Mono",
       },
-     colors: {
-      lightMode: {
-        light: "#FFFCF9",       // A very subtle 'Warm Paper' off-white (matches Literata)
-        lightgray: "#E8E4E1",   // Borders (Warm grey)
-        gray: "#9E9E9E",        // Metadata text
-        darkgray: "#2C2C2C",    // Body text (Almost black, softer for reading)
-        dark: "#1A1A1A",        // Headers (Pure dark)
-        
-        // THE PANDA COLORS
-        secondary: "#C0392B",   // Links & Current Page (Deep Rust/Red)
-        tertiary: "#E67E22",    // Hover states & Graph Nodes (Vibrant Orange)
-        
-        // Highlights
-        highlight: "rgba(192, 57, 43, 0.08)", // Very faint red wash for backlinks
-        textHighlight: "#ffecb388",           // Soft Amber highlighter
-      },
-      darkMode: {
-        light: "#121212",       // 'OLED Black' (Deep coding environment)
-        lightgray: "#2A2A2A",   // Borders
-        gray: "#888888",        // Metadata
-        darkgray: "#D4D4D4",    // Body text (Soft white)
-        dark: "#FFFFFF",        // Headers (Pure white)
-        
-        // THE PANDA COLORS (Neon/Terminal Versions)
-        secondary: "#FF9F43",   // Links (Glowing Amber)
-        tertiary: "#D35400",    // Hover/Graph (Burnt Orange)
-        
-        // Highlights
-        highlight: "rgba(255, 159, 67, 0.15)", // Faint amber wash
-        textHighlight: "#b36b0088",            // Dark Amber highlighter
-      },
-    },
+      colors: {
+  lightMode: {
+    light: "#faf8f8",
+    lightgray: "#e5e5e5",
+    gray: "#b8b8b8",
+    darkgray: "#4e4e4e",
+    dark: "#2b2b2b",
+    
+    // Light Mode Links
+    secondary: "#c0392b",  // Base: Deep Rust (Readable on white)
+    tertiary: "#8e281d",   // Hover: Even Darker Rust (High contrast)
+    
+    highlight: "rgba(192, 57, 43, 0.08)",
+    textHighlight: "#fff23688",
+  },
+  darkMode: {
+    // The Obsidian Publish Background
+    light: "#161618",      
+    lightgray: "#393639",
+    gray: "#999999",
+    darkgray: "#dadada",
+    dark: "#ffffff",
+    
+    // PANDA COLORS (Modern "Burnt" Palette)
+    secondary: "#e67e22",  // Base Link: Vibrant Orange (The "Fur")
+    tertiary: "#cf4520",   // Hover Link: Deep Red-Orange (The "Mask") -> DARKER now
+    
+    // Highlights
+    highlight: "rgba(207, 69, 32, 0.15)", // Subtle rust wash
+    textHighlight: "#b3aa0288",
+  },
+},
     },
   },
   plugins: {
