@@ -123,6 +123,11 @@ export const CrawlLinks: QuartzTransformerPlugin<Partial<Options>> = (userOpts) 
                   const simple = simplifySlug(full)
                   outgoing.add(simple)
                   node.properties["data-slug"] = full
+
+                  const isBroken = !ctx.allSlugs.some((slug) => simplifySlug(slug) === simple)
+                  if (isBroken) {
+                    classes.push("broken")
+                  }
                 }
 
                 // rewrite link internals if prettylinks is on

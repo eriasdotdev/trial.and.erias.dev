@@ -1,6 +1,6 @@
 import micromorph from "micromorph"
 import { FullSlug, RelativeURL, getFullSlug, normalizeRelativeURLs } from "../../util/path"
-import { fetchCanonical } from "./util"
+import { fetchCanonical, showNotification } from "./util"
 
 // adapted from `micromorph`
 // https://github.com/natemoo-re/micromorph
@@ -56,6 +56,13 @@ function startLoading() {
   }, 100)
 }
 
+function stopLoading() {
+  const loadingBar = document.querySelector(".navigation-progress")
+  if (loadingBar) {
+    loadingBar.remove()
+  }
+}
+
 let isNavigating = false
 let p: DOMParser
 async function _navigate(url: URL, isBack: boolean = false) {
@@ -64,6 +71,12 @@ async function _navigate(url: URL, isBack: boolean = false) {
   p = p || new DOMParser()
   const contents = await fetchCanonical(url)
     .then((res) => {
+      if (res.status === 404) {
+        showNotification("Page not found")
+        isNavigating = false
+        stopLoading()
+        return
+      }
       const contentType = res.headers.get("content-type")
       if (contentType?.startsWith("text/html")) {
         return res.text()

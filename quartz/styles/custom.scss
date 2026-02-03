@@ -1,3 +1,27 @@
 @use "./base.scss";
 
+
 // put your custom CSS here!
+.graph-notification {
+  position: fixed;
+  top: 40px;
+  right: 20px;
+  background: #222;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10000;
+  width: max-content;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+
+  &.show {
+    opacity: 1;
+  }
+}
+

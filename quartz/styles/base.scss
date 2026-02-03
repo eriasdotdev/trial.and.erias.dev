@@ -93,14 +93,12 @@ a {
 
   &.internal {
     text-decoration: none;
-    background-color: var(--highlight);
-    padding: 0 0.1rem;
-    border-radius: 5px;
     line-height: 1.4rem;
+
 
     &.broken {
       color: var(--secondary);
-      opacity: 0.5;
+      opacity: 0.8;
       transition: opacity 0.2s ease;
       &:hover {
         opacity: 0.8;

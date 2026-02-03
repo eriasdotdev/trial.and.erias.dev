@@ -44,3 +44,27 @@ export async function fetchCanonical(url: URL): Promise<Response> {
   const [_, redirect] = text.match(canonicalRegex) ?? []
   return redirect ? fetch(`${new URL(redirect, url)}`) : res
 }
+
+export function showNotification(message: string) {
+  let notification = document.querySelector<HTMLElement>(".graph-notification")
+  if (!notification) {
+    notification = document.createElement("div")
+    notification.classList.add("graph-notification")
+    document.body.appendChild(notification)
+  }
+
+  notification.innerText = message
+  notification.classList.add("show")
+  
+  // Clear any existing timeout to prevent premature hiding if called rapidly
+  const existingTimeout = notification.dataset.timeoutId
+  if (existingTimeout) {
+    clearTimeout(parseInt(existingTimeout))
+  }
+
+  const timeoutId = setTimeout(() => {
+    notification?.classList.remove("show")
+  }, 3000)
+  
+  notification.dataset.timeoutId = timeoutId.toString()
+}

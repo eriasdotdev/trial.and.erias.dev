@@ -16,7 +16,7 @@ import {
 } from "d3"
 import { Text, Graphics, Application, Container, Circle } from "pixi.js"
 import { Group as TweenGroup, Tween as Tweened } from "@tweenjs/tween.js"
-import { registerEscapeHandler, removeAllChildren } from "./util"
+import { registerEscapeHandler, removeAllChildren, showNotification } from "./util"
 import { FullSlug, SimpleSlug, getFullSlug, resolveRelative, simplifySlug } from "../../util/path"
 import { D3Config } from "../Graph"
 
@@ -74,23 +74,6 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   const visited = getVisited()
   removeAllChildren(graph)
 
-  // Global notification logic
-  let notification = document.querySelector(".graph-notification") as HTMLElement
-  if (!notification) {
-    notification = document.createElement("div")
-    notification.classList.add("graph-notification")
-    document.body.appendChild(notification)
-  }
-  
-  let notificationTimeout: any
-  function showNotification(message: string) {
-    notification.innerText = message
-    notification.classList.add("show")
-    clearTimeout(notificationTimeout)
-    notificationTimeout = setTimeout(() => {
-      notification.classList.remove("show")
-    }, 3000)
-  }
 
   let {
     drag: enableDrag,
