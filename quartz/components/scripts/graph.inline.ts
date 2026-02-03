@@ -50,6 +50,7 @@ type LinkRenderData = GraphicsInfo & {
 type NodeRenderData = GraphicsInfo & {
   simulationData: NodeData
   label: Text
+  offsetY: number
 }
 
 const localStorageKey = "graph-visited"
@@ -72,6 +73,24 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   const slug = simplifySlug(fullSlug)
   const visited = getVisited()
   removeAllChildren(graph)
+
+  // Global notification logic
+  let notification = document.querySelector(".graph-notification") as HTMLElement
+  if (!notification) {
+    notification = document.createElement("div")
+    notification.classList.add("graph-notification")
+    document.body.appendChild(notification)
+  }
+  
+  let notificationTimeout: any
+  function showNotification(message: string) {
+    notification.innerText = message
+    notification.classList.add("show")
+    clearTimeout(notificationTimeout)
+    notificationTimeout = setTimeout(() => {
+      notification.classList.remove("show")
+    }, 3000)
+  }
 
   let {
     drag: enableDrag,
@@ -104,9 +123,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     const outgoing = details.links ?? []
 
     for (const dest of outgoing) {
-      if (validLinks.has(dest)) {
-        links.push({ source: source, target: dest })
-      }
+      links.push({ source: source, target: dest })
     }
 
     if (showTags) {
@@ -169,7 +186,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .force("charge", forceManyBody().strength(-100 * repelForce))
     .force("center", forceCenter().strength(centerForce))
     .force("link", forceLink(graphData.links).distance(linkDistance))
-    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n)).iterations(3))
+    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 30).iterations(3))
 
   const radius = (Math.min(width, height) / 2) * 0.8
   if (enableRadial) simulation.force("radial", forceRadial(radius).strength(0.2))
@@ -194,14 +211,17 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   )
 
   // calculate color
+  // calculate color
   const color = (d: NodeData) => {
     const isCurrent = d.id === slug
     if (isCurrent) {
       return computedStyleMap["--secondary"]
-    } else if (visited.has(d.id) || d.id.startsWith("tags/")) {
+    } else if (validLinks.has(d.id)) {
+      return computedStyleMap["--darkgray"]
+    } else if (d.id.startsWith("tags/")) {
       return computedStyleMap["--tertiary"]
     } else {
-      return computedStyleMap["--gray"]
+      return computedStyleMap["--lightgray"]
     }
   }
 
@@ -209,7 +229,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     const numLinks = graphData.links.filter(
       (l) => l.source.id === d.id || l.target.id === d.id,
     ).length
-    return 2 + Math.sqrt(numLinks)
+    return 4 + Math.sqrt(numLinks) * 1.5
   }
 
   let hoveredNodeId: string | null = null
@@ -230,6 +250,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       }
     } else {
       hoveredNeighbours = new Set()
+      hoveredNeighbours.add(newHoveredId)
       for (const l of linkRenderData) {
         const linkData = l.simulationData
         if (linkData.source.id === newHoveredId || linkData.target.id === newHoveredId) {
@@ -259,10 +280,10 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       // if we are hovering over a node, we want to highlight the immediate neighbours
       // with full alpha and the rest with default alpha
       if (hoveredNodeId) {
-        alpha = l.active ? 1 : 0.2
+        alpha = l.active ? 1 : 0.15
       }
 
-      l.color = l.active ? computedStyleMap["--gray"] : computedStyleMap["--lightgray"]
+      l.color = l.active ? computedStyleMap["--secondary"] : computedStyleMap["--lightgray"]
       tweenGroup.add(new Tweened<LinkRenderData>(l).to({ alpha }, 200))
     }
 
@@ -280,16 +301,40 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     const tweenGroup = new TweenGroup()
 
     const defaultScale = 1 / scale
-    const activeScale = defaultScale * 1.1
+    const activeScale = defaultScale * 1.5
+
+    // Calculate zoom-based alpha for restoration/comparison
+    const zoomScale = currentTransform.k * opacityScale
+    const zoomAlpha = Math.max((zoomScale - 0.5) / 0.5, 0)
+
     for (const n of nodeRenderData) {
       const nodeId = n.simulationData.id
+      
+      // Calculate target alpha based on hover state
+      let targetAlpha = zoomAlpha
+      if (hoveredNodeId !== null && focusOnHover) {
+         if (n.active) {
+            targetAlpha = 1
+         } else {
+            // Dim inactive labels, but respect max visibility from zoom
+            targetAlpha = Math.min(zoomAlpha, 0.15)
+         }
+      }
 
       if (hoveredNodeId === nodeId) {
         tweenGroup.add(
           new Tweened<Text>(n.label).to(
             {
-              alpha: 1,
+              alpha: targetAlpha,
               scale: { x: activeScale, y: activeScale },
+            },
+            100,
+          ),
+        )
+        tweenGroup.add(
+          new Tweened<NodeRenderData>(n).to(
+            {
+              offsetY: 5,
             },
             100,
           ),
@@ -298,8 +343,16 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         tweenGroup.add(
           new Tweened<Text>(n.label).to(
             {
-              alpha: n.label.alpha,
+              alpha: targetAlpha,
               scale: { x: defaultScale, y: defaultScale },
+            },
+            100,
+          ),
+        )
+        tweenGroup.add(
+          new Tweened<NodeRenderData>(n).to(
+            {
+              offsetY: 0,
             },
             100,
           ),
@@ -325,8 +378,14 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
 
       // if we are hovering over a node, we want to highlight the immediate neighbours
       if (hoveredNodeId !== null && focusOnHover) {
-        alpha = n.active ? 1 : 0.2
+        alpha = n.active ? 1 : 0.15
       }
+
+      n.gfx
+        .clear()
+        .circle(0, 0, nodeRadius(n.simulationData))
+        .fill({ color: n.simulationData.id === hoveredNodeId ? computedStyleMap["--secondary"] : n.color })
+        .stroke({ width: n.simulationData.id.startsWith("tags/") ? 2 : 0, color: computedStyleMap["--tertiary"] })
 
       tweenGroup.add(new Tweened<Graphics>(n.gfx, tweenGroup).to({ alpha }, 200))
     }
@@ -378,8 +437,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       interactive: false,
       eventMode: "none",
       text: n.text,
-      alpha: 0,
-      anchor: { x: 0.5, y: 1.2 },
+      alpha: 1,
+      anchor: { x: 0.5, y: 0.25 },
       style: {
         fontSize: fontSize * 15,
         fill: computedStyleMap["--dark"],
@@ -429,6 +488,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       color: color(n),
       alpha: 1,
       active: false,
+      offsetY: 0,
     }
 
     nodeRenderData.push(nodeRenderDatum)
@@ -482,16 +542,24 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           // if the time between mousedown and mouseup is short, we consider it a click
           if (Date.now() - dragStartTime < 500) {
             const node = graphData.nodes.find((n) => n.id === event.subject.id) as NodeData
-            const targ = resolveRelative(fullSlug, node.id)
-            window.spaNavigate(new URL(targ, window.location.toString()))
+            if (validLinks.has(node.id) || node.id.startsWith("tags/")) {
+              const targ = resolveRelative(fullSlug, node.id)
+              window.spaNavigate(new URL(targ, window.location.toString()))
+            } else {
+              showNotification(`The link destination "${node.text}" does not exist.`)
+            }
           }
         }),
     )
   } else {
     for (const node of nodeRenderData) {
       node.gfx.on("click", () => {
-        const targ = resolveRelative(fullSlug, node.simulationData.id)
-        window.spaNavigate(new URL(targ, window.location.toString()))
+        if (validLinks.has(node.simulationData.id) || node.simulationData.id.startsWith("tags/")) {
+          const targ = resolveRelative(fullSlug, node.simulationData.id)
+          window.spaNavigate(new URL(targ, window.location.toString()))
+        } else {
+          showNotification(`The link destination "${node.simulationData.text}" does not exist.`)
+        }
       })
     }
   }
@@ -511,7 +579,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
 
           // zoom adjusts opacity of labels too
           const scale = transform.k * opacityScale
-          let scaleOpacity = Math.max((scale - 1) / 3.75, 0)
+          let scaleOpacity = Math.max((scale - 0.5) / 0.5, 0)
           const activeNodes = nodeRenderData.filter((n) => n.active).flatMap((n) => n.label)
 
           for (const label of labelsContainer.children) {
@@ -523,6 +591,15 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     )
   }
 
+  // initial opacity
+  {
+    const scale = opacityScale
+    let scaleOpacity = Math.max((scale - 0.2) / 0.8, 0)
+    for (const n of nodeRenderData) {
+        n.label.alpha = scaleOpacity
+    }
+  }
+
   let stopAnimation = false
   function animate(time: number) {
     if (stopAnimation) return
@@ -531,7 +608,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       if (!x || !y) continue
       n.gfx.position.set(x + width / 2, y + height / 2)
       if (n.label) {
-        n.label.position.set(x + width / 2, y + height / 2)
+        n.label.position.set(x + width / 2, y + height / 2 + nodeRadius(n.simulationData) + 8 + n.offsetY)
       }
     }
 
