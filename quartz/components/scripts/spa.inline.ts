@@ -72,7 +72,10 @@ async function _navigate(url: URL, isBack: boolean = false) {
   const contents = await fetchCanonical(url)
     .then((res) => {
       if (res.status === 404) {
-        showNotification("Page not found")
+        const thisUrl = new URL(url)
+        const segments = thisUrl.pathname.split("/").filter((s) => s.length > 0)
+        const pageName = decodeURIComponent(segments.at(-1) ?? "this page")
+        showNotification(`The link destination "${pageName}" does not exist.`)
         isNavigating = false
         stopLoading()
         return
