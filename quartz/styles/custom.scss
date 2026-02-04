@@ -433,77 +433,9 @@ html, body {
             max-height: none !important;
         }
         
-        // Flex container for Header + Close Button
-        .sidebar-view-header {
+        // Show close button in tablet mode
+        .sidebar-view-header .sidebar-close {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 10px;
-            
-            
-            h3 {
-                margin: 0;
-                font-size: 1rem; 
-                line-height: 1;
-            }
-
-            // Fix TOC Header alignment (Text + Fold Icon)
-            .toc-header {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 8px;
-                background: transparent;
-                border: none;
-                padding: 0;
-                cursor: pointer;
-                color: var(--darkgray);
-                font-weight: bold;
-                
-                h3 {
-                    font-size: 1rem;
-                    display: inline-block;
-                }
-                
-                .fold {
-                    margin-left: 0; // Reset any previous margins
-                    transition: transform 0.3s ease;
-                }
-                
-                &.collapsed .fold {
-                    transform: rotate(-90deg);
-                }
-            }
-
-            .sidebar-close {
-                display: block; // Show in tablet mode
-                position: static; // In flow
-                background: transparent;
-                border: none;
-                cursor: pointer;
-                color: var(--darkgray);
-                padding: 0; 
-                
-                // Match icon button styles
-                border-radius: 10px;
-                transition: color 0.2s, background 0.2s;
-                width: 36px;
-                height: 36px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                
-                &:hover {
-                    background: rgba(255, 255, 255, 0.05);
-                    color: var(--secondary);
-                }
-                
-                svg {
-                    width: 20px;
-                    height: 20px;
-                }
-            }
         }
         
         .sidebar-content {
@@ -604,5 +536,76 @@ html, body {
         overflow-y: auto; // Allow content to scroll
         max-height: none; // Override any default limits
         padding-bottom: 10px;
+    }
+}
+
+// Global styles for the script-injected header
+.sidebar.right {
+    .sidebar-view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 1rem; // Use standard spacing
+
+        h3 {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        // Fix TOC Header alignment (Text + Fold Icon)
+        .toc-header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: var(--darkgray);
+            font-weight: bold;
+
+            h3 {
+                font-size: 1rem;
+                display: inline-block;
+            }
+
+            .fold {
+                margin-left: 0;
+                transition: transform 0.3s ease;
+            }
+
+            &.collapsed .fold {
+                transform: rotate(-90deg);
+            }
+        }
+
+        .sidebar-close {
+            display: none; // Hidden by default (desktop)
+            position: static;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--darkgray);
+            padding: 0;
+            border-radius: 10px;
+            transition: color 0.2s, background 0.2s;
+            width: 36px;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.05);
+                color: var(--secondary);
+            }
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
     }
 }
