@@ -84,8 +84,21 @@ html, body {
   // Right Sidebar Box
   .sidebar.right {
      @include box-style;
+     padding: 0; // No padding on container to allow full-height children
      margin: 0;
+     
+     // Apply custom scrollbar to all scrollable children
+     *::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+     }
+     *::-webkit-scrollbar-thumb {
+        background: var(--gray);
+        border-radius: 3px;
+     }
   }
+
+
 
   // Center Box
   .center {
@@ -259,3 +272,337 @@ html, body {
   }
 }
 
+
+// --- Responsive Right Sidebar ---
+
+.page > #quartz-body {
+  .sidebar.right {
+    display: flex !important; // Override default block/grid if any
+    flex-direction: row !important; // Force row layout with high specificity
+    flex-wrap: nowrap; // Prevent wrapping
+    align-items: stretch; // Ensure children take full height
+    gap: 0;
+    transition: width 0.3s ease, min-width 0.3s ease;
+    overflow: hidden; // Prevent content from spilling when collapsed
+
+    // Hide original content before script wraps it to prevent FOUC
+    // Once script moves them to .sidebar-content, these rules wont match
+    & > .graph, & > .toc, & > .backlinks {
+        display: none !important;
+    }
+
+    .sidebar-icons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      // Fixed width to keep icons on the left during expansion
+      width: 50px !important; 
+      min-width: 50px !important;
+      max-width: 50px !important;
+      flex: 0 0 50px !important; // Prevent any flex growing/shrinking
+      
+      align-items: center; // Center icons horizontally
+      border-right: 1px solid transparent; // visual separator
+      padding-top: 6px; // Spacing from top (padding ensures border goes to top)
+      min-height: 100%; // Ensure full height
+      box-sizing: border-box;
+
+      button {
+        background: transparent;
+        border: none;
+        color: var(--darkgray);
+        padding: 0; // Remove padding to let flex center align
+        cursor: pointer;
+        border-radius: 10px; // Slightly larger radius for the square
+        transition: color 0.2s, background 0.2s;
+        
+        // Make it square and centered
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--secondary);
+        }
+
+        &.active {
+          color: var(--secondary);
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+
+    .sidebar-content {
+      flex: 1;
+      // Change to flex container to pass height constraint down
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; // Disable scrolling on container
+      
+      min-width: 250px; // Ensure content doesn't squash too much
+      padding: 10px; // Add padding for content (vertical + horizontal)
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      
+      // Hide all children by default
+      & > div {
+        display: none;
+        flex: 1;        // Allow children to fill height
+        min-height: 0;  // Critical for nested scrolling
+        width: 100%;
+      }
+      
+      // Show active child
+      & > div.active {
+        display: flex;  // Use flex for children to manage their own layout
+        flex-direction: column;
+        animation: fadeIn 0.3s ease; 
+      }
+    }
+
+    // Expanded State
+    &.expanded {
+      .sidebar-content {
+        opacity: 1;
+      }
+      .sidebar-icons {
+         border-right: 1px solid var(--lightgray);
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// > 1200px: Always expanded/managed by the script logic, but CSS ensures it *can* look expanded
+@media all and (min-width: 1200px) {
+    .sidebar.right {
+        // Grid usually handles width, but flex internal is key
+        .sidebar-content {
+            opacity: 1; 
+            display: block;
+        }
+        // Ensure one is active by default logic in script
+        .sidebar-close {
+            display: none;
+        }
+    }
+}
+
+// 800px - 1200px: Collapsed by default
+@media all and (min-width: 800px) and (max-width: 1200px) {
+  .page > #quartz-body {
+     // Force 3-column layout to prevent wrapping
+     display: grid;
+     grid-template-columns: 250px 1fr auto; // Left (250px) | Center (1fr) | Right (auto)
+     grid-template-rows: minmax(0, 1fr) auto;
+     column-gap: 8px;
+     row-gap: 0;
+
+     .sidebar.left {
+        grid-column: 1;
+        grid-row: 1;
+     }
+
+     .center {
+        grid-column: 2;
+        grid-row: 1;
+     }
+
+     .sidebar.right {
+        grid-column: 3;
+        grid-row: 1;
+        // Collapse/Expand width handling
+        width: 50px; 
+        min-width: 50px;
+        height: 100%; // Force full height to override base.scss unset
+        
+        // Override base.scss constraints (lines 259-261)
+        & > * {
+            max-height: none !important;
+        }
+        
+        // Flex container for Header + Close Button
+        .sidebar-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
+            
+            
+            h3 {
+                margin: 0;
+                font-size: 1rem; 
+                line-height: 1;
+            }
+
+            // Fix TOC Header alignment (Text + Fold Icon)
+            .toc-header {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                background: transparent;
+                border: none;
+                padding: 0;
+                cursor: pointer;
+                color: var(--darkgray);
+                font-weight: bold;
+                
+                h3 {
+                    font-size: 1rem;
+                    display: inline-block;
+                }
+                
+                .fold {
+                    margin-left: 0; // Reset any previous margins
+                    transition: transform 0.3s ease;
+                }
+                
+                &.collapsed .fold {
+                    transform: rotate(-90deg);
+                }
+            }
+
+            .sidebar-close {
+                display: block; // Show in tablet mode
+                position: static; // In flow
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                color: var(--darkgray);
+                padding: 0; 
+                
+                // Match icon button styles
+                border-radius: 10px;
+                transition: color 0.2s, background 0.2s;
+                width: 36px;
+                height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                
+                &:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    color: var(--secondary);
+                }
+                
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
+            }
+        }
+        
+        .sidebar-content {
+            display: none; 
+        }
+
+        &.expanded {
+            width: 350px; 
+            min-width: 350px;
+            .sidebar-content {
+                display: block;
+            }
+        }
+     }
+     
+     & > footer {
+        // Full width footer bar
+        grid-column: 1 / -1; // Span across all 3 columns
+        grid-row: 2;
+        width: 100%; // Ensure full width for centering
+        
+        // Minimalist Transparent Footer
+        background: transparent;
+        border: none;
+        height: auto; 
+        min-height: unset; 
+        padding: 0 10px 4px 10px; // Very minimal padding to sit at bottom
+        margin: 0;
+        
+        // Flex scaling to center text
+        display: flex;
+        flex-direction: row; // Ensure row layout
+        align-items: center;
+        justify-content: center; // Strictly center main axis
+        
+        // Ensure text is readable but small
+        text-align: center; 
+        font-size: 0.7rem; 
+        color: var(--darkgray);
+        // Auto-hide & Dynamic Resize Animation
+        opacity: 0; 
+        max-height: 8px; 
+        padding: 0 10px; // Keep horizontal padding constant to prevent "left-up" drift
+        overflow: hidden; 
+        
+        // Transition max-height and padding (vertical only)
+        transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+
+        &:hover {
+          opacity: 1;
+          max-height: 60px; 
+          padding: 4px 10px 8px 10px; // Vertical padding increases, horizontal stays same
+        }
+        
+        // Specific footer styling overrides
+        p {
+            margin: 0;
+            line-height: 1; 
+            text-align: center;
+            width: auto; // Prevent taking full width if implicit
+        }
+        
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            justify-content: center; // Ensure list items center
+            
+            li {
+                margin: 0;
+                padding: 0;
+                line-height: 1;
+                display: flex;
+                align-items: center;
+                
+                a {
+                    line-height: 1;
+                    display: block;
+                }
+            }
+        }
+     }
+  }
+}
+
+// Fix TOC Height and Scrolling
+.sidebar.right .toc {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden; // Container shouldn't scroll, content should
+
+    .toc-content {
+        flex: 1;
+        overflow-y: auto; // Allow content to scroll
+        max-height: none; // Override any default limits
+        padding-bottom: 10px;
+    }
+}

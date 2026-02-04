@@ -3,6 +3,8 @@ import { QuartzComponent, QuartzComponentProps } from "./types"
 import HeaderConstructor from "./Header"
 import BodyConstructor from "./Body"
 import { JSResourceToScriptElement, StaticResources } from "../util/resources"
+// @ts-ignore
+import rightSidebarScript from "./scripts/rightSidebar.inline"
 import { FullSlug, RelativeURL, joinSegments, normalizeHastElement } from "../util/path"
 import { clone } from "../util/clone"
 import { visit } from "unist-util-visit"
@@ -59,6 +61,11 @@ export function pageResources(
     loadTime: "afterDOMReady",
     moduleType: "module",
     contentType: "external",
+  })
+  resources.js.push({
+    loadTime: "afterDOMReady",
+    contentType: "inline",
+    script: rightSidebarScript,
   })
 
   return resources
