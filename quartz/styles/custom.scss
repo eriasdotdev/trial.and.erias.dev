@@ -686,21 +686,18 @@ html, body {
   }
 
   .page > #quartz-body {
-    padding: 0;
-    gap: 0;
+    padding: 10px;
+    gap: 8px;
     display: flex; // Use flex to reorder
     flex-direction: column;
     
     .sidebar.left {
        order: 1;
-       // Keep existing style
-       border-radius: 0;
-       border: none;
-       background-color: var(--light);
-       padding: 1rem;
+       @include box-style;
+       margin: 0;
        height: auto;
        width: 100%;
-       box-sizing: border-box;
+       padding: 10px 20px !important;
     }
 
     .center {
@@ -709,16 +706,13 @@ html, body {
 
     .breadcrumbs-box {
         order: 2; // With header
+        @include box-style;
         width: 100% !important; // Override desktop fixed width/flex
         max-width: 100%;
-        margin-bottom: 0.5rem;
-        border-radius: 0;
-        border: none; 
-        background: transparent !important; 
-        padding: 0 1rem;
+        margin-bottom: 0;
         height: auto;
-        min-height: 40px;
-        border: none !important;
+        min-height: 52px;
+        padding: 10px 20px;
     }
 
     // Increase specificity to ensure display: contents works
