@@ -277,7 +277,7 @@ export function renderPage(
             <div class="center">
               <div class="breadcrumbs-box">
                 {(slug as string) !== "index" && (() => {
-                  const B = Breadcrumbs()
+                  const B = Breadcrumbs({ showCurrentPage: false })
                   return <B {...componentData} />
                 })()}
               </div>
