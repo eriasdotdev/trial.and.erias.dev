@@ -275,37 +275,41 @@ export function renderPage(
           <Body {...componentData}>
             {LeftComponent}
             <div class="center">
-              <div class="breadcrumbs-box">
-                {(slug as string) !== "index" && (() => {
-                  const B = Breadcrumbs({ showCurrentPage: false })
-                  return <B {...componentData} />
-                })()}
-              </div>
-              <div class="center-content">
-                <div class="page-header">
-                  <Header {...componentData}>
-                    {header.map((HeaderComponent) => (
-                      <HeaderComponent {...componentData} />
-                    ))}
-                  </Header>
-                  <div class="popover-hint">
-                    {beforeBody.map((BodyComponent) => (
+              <div class="center-body">
+                <div class="breadcrumbs-box">
+                  {(slug as string) !== "index" && (() => {
+                    const B = Breadcrumbs({ showCurrentPage: false })
+                    return <B {...componentData} />
+                  })()}
+                </div>
+                <div class="center-main">
+                  <div class="center-content">
+                    <div class="page-header">
+                    <Header {...componentData}>
+                      {header.map((HeaderComponent) => (
+                        <HeaderComponent {...componentData} />
+                      ))}
+                    </Header>
+                    <div class="popover-hint">
+                      {beforeBody.map((BodyComponent) => (
+                        <BodyComponent {...componentData} />
+                      ))}
+                    </div>
+                  </div>
+                  <div class="page-content">
+                    <Content {...componentData} />
+                  </div>
+                  <hr />
+                  <div class="page-footer">
+                    {afterBody.map((BodyComponent) => (
                       <BodyComponent {...componentData} />
                     ))}
                   </div>
                 </div>
-                <div class="page-content">
-                  <Content {...componentData} />
-                </div>
-                <hr />
-                <div class="page-footer">
-                  {afterBody.map((BodyComponent) => (
-                    <BodyComponent {...componentData} />
-                  ))}
-                </div>
+                {RightComponent}
+              </div>
               </div>
             </div>
-            {RightComponent}
             <Footer {...componentData} />
           </Body>
         </div>

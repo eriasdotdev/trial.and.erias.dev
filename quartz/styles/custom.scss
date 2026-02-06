@@ -145,6 +145,12 @@ html, body {
             flex-wrap: nowrap;
             overflow: hidden;
             
+            // Allow wrapping on desktop if needed, or keeping nowrap
+            @media all and (min-width: 800px) {
+               flex-wrap: wrap; // Let breadcrumbs wrap on wide screens?
+               // Actually user wants it "as wide as center content".
+            }
+            
             .breadcrumb-element {
                 display: flex;
                 flex-direction: row;
@@ -169,13 +175,47 @@ html, body {
         }
     }
 
+    .center-body {
+        // Desktop Grid Layout
+        // The center-body is now the grid container for Breadcrumbs, Content, and Sidebar
+        display: grid;
+        grid-template-columns: 1fr auto; // Content | Sidebar
+        grid-template-rows: auto 1fr; // Breadcrumbs | Content
+        gap: 8px;
+        height: 100%;
+        overflow: hidden;
+        min-height: 0;
+    }
+    
+    // Phantom container on Desktop
+    .center-main {
+        display: contents;
+    }
+
+    .breadcrumbs-box {
+        grid-column: 1; // Left column (Content width)
+        grid-row: 1; // Top row
+        @include box-style;
+        height: 52px;
+        min-height: 52px;
+        flex: 0 0 52px;
+        padding: 0 20px; 
+        display: flex;
+        align-items: center;
+        overflow: hidden; 
+        // ... breadcrumb inner styles ...
+    }
+
     .center-content {
+        grid-column: 1; // Left column
+        grid-row: 2; // Bottom row
         @include box-style;
         flex: 1; 
         display: flex;
         flex-direction: column;
         overflow-y: auto; // Content scrolls here
         min-height: 0;
+        height: 100%; // Fill grid cell
     }
   }
 
@@ -202,17 +242,20 @@ html, body {
   .page > #quartz-body {
       // Main content (boxes) takes all space, footer takes minimal space at bottom
       // min-height: 0 is critical for the 1fr row to allow inner scrolling!
+      grid-template-columns: 250px 1fr; // 2 Columns: Left | Center (which contains content + right sidebar)
       grid-template-rows: minmax(0, 1fr) auto; 
       column-gap: 8px; 
       row-gap: 0; // Remove gap so footer touches content boxes directly
       
       .center {
         grid-row: 1; // Center box takes the main 1fr space
+        grid-column: 2;
       }
       
       // EXPLICITLY constrain sidebars to row 1 to prevent overlap
-      .sidebar.left, .sidebar.right {
+      .sidebar.left {
         grid-row: 1;
+        grid-column: 1;
       }
       
       & > footer {
@@ -468,9 +511,9 @@ html, body {
 // 800px - 1200px: Collapsed by default
 @media all and (min-width: 800px) and (max-width: 1200px) {
   .page > #quartz-body {
-     // Force 3-column layout to prevent wrapping
+     // Force 2-column layout to prevent wrapping (Right sidebar is now inside Center)
      display: grid;
-     grid-template-columns: 250px 1fr auto; // Left (250px) | Center (1fr) | Right (auto)
+     grid-template-columns: 250px 1fr; // Left (250px) | Center (1fr)
      grid-template-rows: minmax(0, 1fr) auto;
      column-gap: 8px;
      row-gap: 0;
@@ -486,8 +529,10 @@ html, body {
      }
 
      .sidebar.right {
-        grid-column: 3;
-        grid-row: 1;
+        // Grid Positioning for Tablet/Desktop
+        grid-column: 2;
+        grid-row: 1 / span 2; // Span Breadcrumbs + Content height
+        
         // Collapse/Expand width handling
         width: 50px; 
         min-width: 50px;
@@ -716,13 +761,39 @@ html, body {
     }
 
     // Increase specificity to ensure display: contents works
+    .center .center-body {
+        order: 3; 
+        display: flex;
+        flex-direction: column;
+        padding: 0; // Reset padding on the body wrapper
+        background: transparent;
+        border: none;
+        gap: 0; // Gap is inside center-main now? No, center-body separates Breadcrumbs from Content.
+        // center-body contains [breadcrumbs-box, center-main]
+        gap: 10px;
+    }
+    
+    .center .center-main {
+        @include box-style; // The "Unified Box" styling moves here
+        display: flex;
+        flex-direction: column;
+        padding: 15px; // Compact frame
+        gap: 10px; // Reduced gap
+    }
+    
+    .center .breadcrumbs-box {
+        order: 1; // First
+        width: 100% !important;
+        margin-bottom: 0;
+    }
+    
     .center .center-content {
         display: contents !important; 
     }
 
     // Mobile Right Sidebar (Top Bar) -> Icons
     .sidebar.right {
-       order: 4; // After page header
+       order: 2; // After Header (1)
        display: flex !important;
        flex-direction: column !important;
        width: 100% !important;
@@ -730,19 +801,24 @@ html, body {
        height: auto;
        background: transparent;
        border: none;
-       padding: 0 1rem 1rem 1rem; // Add bottom padding to separate from content
+       padding: 0 !important; // Fully reset padding
        gap: 4px;
        box-sizing: border-box;
        
        .sidebar-icons {
-           @include box-style;
+           // Remove box style from icons, just plain row
+           background: transparent;
+           border: none;
+           border-right: none !important; // Override expanded state
+           border-radius: 0;
+           padding: 0; // Tight packing
+           
            flex-direction: row;
            width: 100% !important;
            max-width: 100% !important; // Override desktop constraint
            height: 52px;
            min-height: 52px;
            flex: 0 0 52px !important;
-           padding: 0 10px;
            justify-content: space-between;
            gap: 10px;
            align-items: center;
@@ -794,11 +870,17 @@ html, body {
        }
     }
 
-    // Children of center-content (now direct flex items via display:contents)
+    // Children of center-main
     .page-header {
-       order: 3; // Before right sidebar
+       order: 2; // Inside center-main (after implicit start)
+       // Actually, center-main has {center-content [header...], right}
+       // center-content is display:contents.
+       // So children are: page-header, page-content, page-footer, sidebar.right
+       
+       order: 1; // Header first
        width: 100%;
-       padding: 1rem;
+       padding: 0 !important; 
+       margin: 0;
        box-sizing: border-box;
     }
     
@@ -806,7 +888,7 @@ html, body {
     hr {
         order: 10; // With content (appears after due to source order)
         width: 100%;
-        margin: 2rem 0;
+        margin: 1rem 0; // Compact margin
         border: none;
         border-top: 1px solid var(--lightgray);
     }
@@ -814,7 +896,7 @@ html, body {
     .page-content {
        order: 10; // Bottom (force it down)
        width: 100%;
-       padding: 0 1rem; // Add side padding for content
+       padding: 0 !important; // Remove extra padding
        box-sizing: border-box;
     }
     
