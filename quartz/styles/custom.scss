@@ -729,31 +729,31 @@ html, body {
     }
 
     .breadcrumbs-box {
-        // Integrate into the unified card
+        // Separate Box
         order: 0; // Top
         @include box-style;
-        border: none;
-        background: transparent; // Blend in with parent box
-        padding: 0 0 10px 0; // Bottom spacing only
-        margin: 0;
         width: 100% !important;
-        min-height: auto;
-        box-shadow: none;
-        border-radius: 0;
-        border-bottom: 1px solid var(--lightgray); // Subtle separator
-        margin-bottom: 10px;
+        margin: 0 0 8px 0 !important; // 8px Gap
+        height: auto;
+        min-height: 52px;
+        padding: 0 20px;
+        border-radius: 15px; // Full radius
+        background-color: var(--light);
+        border: 1px solid var(--lightgray);
     }
 
     // Increase specificity to ensure display: contents works
     // Increase specificity to ensure display: contents works
+    // Unified Box Container (Transparent Wrapper)
     .center .center-body {
-        order: 3; // Ensure it comes after Breadcrumbs (2) ? Breadcrumbs inside now!
-        // Unified Card on Mobile
-        @include box-style;
+        order: 3; 
         display: flex;
         flex-direction: column;
-        padding: 15px; // More compact frame
-        gap: 10px; // Reduced gap
+        padding: 0; // No Pdding on the container
+        gap: 0; // Let margins handle gaps
+        background: transparent; // Transparent
+        border: none; // No border
+        box-shadow: none;
     }
     
     // Unwrap the column on mobile so items sit directly in the unified card
@@ -894,6 +894,24 @@ html, body {
        gap: 4px;
        box-sizing: border-box;
        
+       // Unified Box Middle Part
+       background: var(--light);
+       border-left: 1px solid var(--lightgray) !important; // Manual Border Match
+       border-right: 1px solid var(--lightgray) !important;
+       border-bottom: none;
+       border-top: none;
+       border-radius: 0; 
+       padding: 0 15px !important; // Match horizontal padding of header/content
+       
+       // Unified Box Middle Part
+       background: var(--light);
+       border-left: 1px solid var(--lightgray) !important; // Manual Border Match
+       border-right: 1px solid var(--lightgray) !important;
+       border-bottom: none;
+       border-top: none;
+       border-radius: 0; 
+       padding: 0 15px !important; // Match horizontal padding of header/content
+       
        .sidebar-icons {
            // Remove box style from icons, just plain row
            background: transparent;
@@ -960,35 +978,48 @@ html, body {
     }
 
     // Children of center-content (now direct flex items via display:contents)
+    // Manually create Unified Box look from parts
+    // Manually create Unified Box look from parts
     .page-header {
-       order: 1; // First in the box (Before sidebar 2)
+       order: 1; // First in the box
        width: 100%;
-       padding: 0 !important; // Remove extra padding
+       @include box-style;
+       border-bottom: none; // Merge with sidebar
+       border-radius: 15px 15px 0 0; // Top Round
+       padding: 15px 15px 5px 15px !important;
        margin: 0;
-       box-sizing: border-box;
+       background: var(--light);
     }
     
-    // Explicitly target hr
     hr {
-        order: 10; // With content (appears after due to source order)
+        order: 10; 
         width: 100%;
-        margin: 1rem 0; // Compact margin
+        margin: 0; // No margin inside the tight box context?
         border: none;
         border-top: 1px solid var(--lightgray);
+        background: var(--light); // In case it has bg
+        // Wait, HR is a line. It just separates content.
+        display: none; // Hide HR visually if using box stacking? Let's keep it but handle nicely.
+        // Actually, if we merge boxes, HR needs to be inside one or be one.
+        // Let's hide HR on mobile to simplify "Unified Box" since sidebar acts as separator.
     }
 
     .page-content {
-       order: 10; // Bottom (force it down)
+       order: 10; // Bottom
        width: 100%;
-       padding: 0 !important; // Remove extra padding
-       box-sizing: border-box;
+       @include box-style;
+       border-top: none; // Merge with sidebar
+       border-radius: 0 0 15px 15px; // Bottom Round
+       padding: 5px 15px 15px 15px !important;
+       margin: 0;
+       background: var(--light);
     }
     
     .page-footer {
-        order: 11; // After content (10)
-        width: 100%;
-        padding: 2rem 1rem;
-        box-sizing: border-box;
+         order: 11;
+         padding: 2rem 1rem;
+         background: transparent; // Outside box
+         border: none;
     }
     
     & > footer {
