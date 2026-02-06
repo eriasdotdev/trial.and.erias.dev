@@ -102,8 +102,16 @@ html, body {
 
   // Center Box
   .center {
-    @include box-style;
+    // No box-style here, it's now a container
     margin: 0;
+
+    // Header Elements Margin Override
+    .page-header,
+    .article-title,
+    .content-meta {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
     
     // Grid Positioning: Center Column, Spanning Header+Content+Footer
     grid-column: 2; 
@@ -112,6 +120,63 @@ html, body {
     display: flex;
     flex-direction: column;
     max-width: 100%; 
+    gap: 8px;     // Gap between breadcrumbs and content
+    height: 100%; // Ensure full height
+    min-height: 0; // Prevent flex blowout
+    
+    .breadcrumbs-box {
+        @include box-style;
+        height: 52px;
+        min-height: 52px;
+        flex: 0 0 52px;
+        padding: 0 20px; // Horizontal padding
+        display: flex;
+        align-items: center;
+        overflow: hidden; 
+        
+        // Remove default margin from breadcrumbs if any
+        .breadcrumb-container {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            overflow: hidden;
+            
+            .breadcrumb-element {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                min-width: 0; // Allow shrinking
+                flex-shrink: 1;
+                
+                a {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: block;
+                    // max-width needs to be constrained, flex should handle it if min-width is 0
+                }
+                
+                p {
+                    margin: 0;
+                    display: inline-block;
+                    flex-shrink: 0; // Don't shrink the spacer
+                }
+            }
+        }
+    }
+
+    .center-content {
+        @include box-style;
+        flex: 1; 
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto; // Content scrolls here
+        min-height: 0;
+    }
   }
 
   // Site Footer (Inside the Grid but outside the visual box? No, plan said outside box but in grid)
@@ -639,21 +704,31 @@ html, body {
     }
 
     .center {
-       display: contents; // Unwrap center to allow reordering children
-       // Padding must be handled by children now
+       display: contents; // Unwrap center
     }
 
-    // Children of center (now direct flex items of #quartz-body)
-    .page-header {
-       order: 2;
-       width: 100%;
-       padding: 1rem;
-       box-sizing: border-box;
+    .breadcrumbs-box {
+        order: 2; // With header
+        width: 100% !important; // Override desktop fixed width/flex
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+        border-radius: 0;
+        border: none; 
+        background: transparent !important; 
+        padding: 0 1rem;
+        height: auto;
+        min-height: 40px;
+        border: none !important;
     }
-    
+
+    // Increase specificity to ensure display: contents works
+    .center .center-content {
+        display: contents !important; 
+    }
+
     // Mobile Right Sidebar (Top Bar) -> Icons
     .sidebar.right {
-       order: 3; // After header, before content
+       order: 4; // After page header
        display: flex !important;
        flex-direction: column !important;
        width: 100% !important;
@@ -724,35 +799,40 @@ html, body {
            display: flex;
        }
     }
-    
-    // Handle Content and Footer (siblings of page-header in center)
-    // Now we have a specific class for content
-    
-    .page-content {
-       order: 4;
+
+    // Children of center-content (now direct flex items via display:contents)
+    .page-header {
+       order: 3; // Before right sidebar
        width: 100%;
-       padding: 0 1rem; // Add side padding for content
+       padding: 1rem;
        box-sizing: border-box;
     }
-
-    // Explicitly target hr if needed, or included in above (hr is sibling)
+    
+    // Explicitly target hr
     hr {
-        order: 4;
+        order: 10; // With content (appears after due to source order)
         width: 100%;
         margin: 2rem 0;
         border: none;
         border-top: 1px solid var(--lightgray);
     }
+
+    .page-content {
+       order: 10; // Bottom (force it down)
+       width: 100%;
+       padding: 0 1rem; // Add side padding for content
+       box-sizing: border-box;
+    }
     
     .page-footer {
-        order: 5;
+        order: 11; // After content (10)
         width: 100%;
         padding: 2rem 1rem;
         box-sizing: border-box;
     }
     
     & > footer {
-       order: 6;
+       order: 12; // Very bottom
        grid-column: 1;
        grid-row: auto;
        border-radius: 0;
