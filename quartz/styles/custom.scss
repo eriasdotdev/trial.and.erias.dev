@@ -222,55 +222,7 @@ html, body {
   }
 }
 
-// Mobile Adjustments
-@media all and (max-width: 800px) {
-  html, body, .page, .page > #quartz-body {
-    height: auto;
-    overflow-x: hidden; // Prevent horizontal scrolling
-    overflow-y: auto; // Restore vertical scrolling!
-    width: 100%;
-    max-width: 100vw;
-  }
 
-  .page > #quartz-body {
-    padding: 0;
-    gap: 0;
-    display: block; // Stack vertically on mobile
-    
-    .sidebar.left, .sidebar.right, .center {
-      border-radius: 0;
-      border: none;
-      background-color: var(--light);
-      padding: 1rem;
-      height: auto;
-      overflow-y: visible;
-      width: 100%;
-      max-width: 100%; // Ensure no overflow
-      box-sizing: border-box; // Include padding in width
-    }
-    
-    .center {
-       grid-column: 1;
-       grid-row: auto;
-    }
-    
-    & > footer {
-       grid-column: 1;
-       grid-row: auto;
-       border-radius: 0;
-       border: none;
-       background-color: transparent;
-       padding: 2rem;
-       width: 100%;
-       max-width: 100%;
-       box-sizing: border-box;
-       
-       p {
-         line-height: 1.6rem; // Revert line height for mobile
-       }
-    }
-  }
-}
 
 
 // --- Responsive Right Sidebar ---
@@ -387,17 +339,65 @@ html, body {
 
 // > 1200px: Always expanded/managed by the script logic, but CSS ensures it *can* look expanded
 @media all and (min-width: 1200px) {
+  .page > #quartz-body {
     .sidebar.right {
         // Grid usually handles width, but flex internal is key
+        flex-direction: column !important; // Stack icons on top of content
+        background: transparent; // Remove box style from container
+        border: none;
+        padding: 0;
+        gap: 4px; // Gap between icons and content
+        
         .sidebar-content {
+            @include box-style; // Apply box style to content
             opacity: 1; 
             display: block;
+            width: 100%;
+            height: 100%; // Takes remaining space? Flex will handle it.
+            flex: 1; // Grow to fill space
+            padding: 10px; // Restore padding
+            min-height: 0; // Allow scrolling
+            overflow: hidden; // Inner scrolling handled by children
         }
+        
+        .sidebar-icons {
+            @include box-style; // Apply box style to icons
+            flex-direction: row; // Horizontal bar
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            height: 52px; // Fixed height for top bar
+            min-height: 52px;
+            flex: 0 0 52px !important;
+            
+            // Remove previous manual borders since box-style adds border
+            // border-bottom: 1px solid var(--lightgray); 
+            
+            padding: 0 10px; // Horizontal padding
+            justify-content: space-between; // Spread them out or fill
+            gap: 10px; // Gap between buttons
+            align-items: center;
+            
+            button {
+                width: auto; // Allow to stretch
+                flex: 1; // "Columns roughly equal"
+                height: 36px;
+                border-radius: 8px;
+                
+                // Active indicator for top bar
+                &.active {
+                   background: rgba(255, 255, 255, 0.1);
+                   color: var(--secondary);
+                }
+            }
+        }
+
         // Ensure one is active by default logic in script
         .sidebar-close {
             display: none;
         }
     }
+  }
 }
 
 // 800px - 1200px: Collapsed by default
@@ -546,7 +546,7 @@ html, body {
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        margin-bottom: 1rem; // Use standard spacing
+        margin-bottom: 0rem; // Use standard spacing
 
         h3 {
             margin: 0;
@@ -608,4 +608,164 @@ html, body {
             }
         }
     }
+}
+
+// Mobile Adjustments
+@media all and (max-width: 800px) {
+  html, body, .page, .page > #quartz-body {
+    height: auto;
+    overflow-x: hidden; // Prevent horizontal scrolling
+    overflow-y: auto; // Restore vertical scrolling!
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .page > #quartz-body {
+    padding: 0;
+    gap: 0;
+    display: flex; // Use flex to reorder
+    flex-direction: column;
+    
+    .sidebar.left {
+       order: 1;
+       // Keep existing style
+       border-radius: 0;
+       border: none;
+       background-color: var(--light);
+       padding: 1rem;
+       height: auto;
+       width: 100%;
+       box-sizing: border-box;
+    }
+
+    .center {
+       display: contents; // Unwrap center to allow reordering children
+       // Padding must be handled by children now
+    }
+
+    // Children of center (now direct flex items of #quartz-body)
+    .page-header {
+       order: 2;
+       width: 100%;
+       padding: 1rem;
+       box-sizing: border-box;
+    }
+    
+    // Mobile Right Sidebar (Top Bar) -> Icons
+    .sidebar.right {
+       order: 3; // After header, before content
+       display: flex !important;
+       flex-direction: column !important;
+       width: 100% !important;
+       max-width: 100%;
+       height: auto;
+       background: transparent;
+       border: none;
+       padding: 0 1rem 1rem 1rem; // Add bottom padding to separate from content
+       gap: 4px;
+       box-sizing: border-box;
+       
+       .sidebar-icons {
+           @include box-style;
+           flex-direction: row;
+           width: 100% !important;
+           max-width: 100% !important; // Override desktop constraint
+           height: 52px;
+           min-height: 52px;
+           flex: 0 0 52px !important;
+           padding: 0 10px;
+           justify-content: space-between;
+           gap: 10px;
+           align-items: center;
+
+           button {
+               width: auto;
+               flex: 1;
+               height: 36px;
+               border-radius: 8px;
+               &.active {
+                 background: rgba(255, 255, 255, 0.1);
+                 color: var(--secondary);
+               }
+           }
+       }
+       
+       .sidebar-content {
+           @include box-style;
+           width: 100%;
+           flex: 1;
+           height: 323px; // Fixed height for consistency across views
+           min-height: 323px;
+           max-height: 323px;
+           overflow-y: auto; // Allow internal scrolling
+           padding: 10px;
+           
+           // Ensure it pushes content down when expanded
+           position: static; 
+           
+           // Arrange links horizontally
+           ul {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 0;
+                margin: 0;
+                list-style: none;
+                
+                li {
+                    margin: 0;
+                }
+           }
+       }
+       
+       // Ensure close button is visible on mobile if needed, or hide if using toggle logic
+       .sidebar-view-header .sidebar-close {
+           display: flex;
+       }
+    }
+    
+    // Handle Content and Footer (siblings of page-header in center)
+    // Now we have a specific class for content
+    
+    .page-content {
+       order: 4;
+       width: 100%;
+       padding: 0 1rem; // Add side padding for content
+       box-sizing: border-box;
+    }
+
+    // Explicitly target hr if needed, or included in above (hr is sibling)
+    hr {
+        order: 4;
+        width: 100%;
+        margin: 2rem 0;
+        border: none;
+        border-top: 1px solid var(--lightgray);
+    }
+    
+    .page-footer {
+        order: 5;
+        width: 100%;
+        padding: 2rem 1rem;
+        box-sizing: border-box;
+    }
+    
+    & > footer {
+       order: 6;
+       grid-column: 1;
+       grid-row: auto;
+       border-radius: 0;
+       border: none;
+       background-color: transparent;
+       padding: 2rem;
+       width: 100%;
+       max-width: 100%;
+       box-sizing: border-box;
+       
+       p {
+         line-height: 1.6rem; // Revert line height for mobile
+       }
+    }
+  }
 }

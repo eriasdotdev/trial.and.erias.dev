@@ -139,7 +139,7 @@ const setupSidebar = () => {
          iconContainer.appendChild(icon)
 
          // Set initial active state (default to Graph if available, else TOC)
-         if (!hasActive && window.innerWidth > 1200) {
+         if (!hasActive && (window.innerWidth < 800 || window.innerWidth > 1200)) {
              view.classList.add("active")
              icon.classList.add("active")
              hasActive = true
@@ -148,7 +148,7 @@ const setupSidebar = () => {
   })
 
   // Initial State Logic
-  if (window.innerWidth > 1200) {
+  if (window.innerWidth < 800 || window.innerWidth > 1200) {
       sidebar.classList.add("expanded")
   }
 }
