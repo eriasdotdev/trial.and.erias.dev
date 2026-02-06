@@ -145,12 +145,6 @@ html, body {
             flex-wrap: nowrap;
             overflow: hidden;
             
-            // Allow wrapping on desktop if needed, or keeping nowrap
-            @media all and (min-width: 800px) {
-               flex-wrap: wrap; // Let breadcrumbs wrap on wide screens?
-               // Actually user wants it "as wide as center content".
-            }
-            
             .breadcrumb-element {
                 display: flex;
                 flex-direction: row;
@@ -176,46 +170,32 @@ html, body {
     }
 
     .center-body {
-        // Desktop Grid Layout
-        // The center-body is now the grid container for Breadcrumbs, Content, and Sidebar
-        display: grid;
-        grid-template-columns: 1fr auto; // Content | Sidebar
-        grid-template-rows: auto 1fr; // Breadcrumbs | Content
-        gap: 8px;
+        display: flex;
+        flex-direction: row; // Desktop default: Row (Sidebar next to Content Column)
         height: 100%;
         overflow: hidden;
+        gap: 8px;
         min-height: 0;
     }
     
-    // Phantom container on Desktop
-    .center-main {
-        display: contents;
-    }
-
-    .breadcrumbs-box {
-        grid-column: 1; // Left column (Content width)
-        grid-row: 1; // Top row
-        @include box-style;
-        height: 52px;
-        min-height: 52px;
-        flex: 0 0 52px;
-        padding: 0 20px; 
+    // New Wrapper for Breadcrumbs + Content
+    .center-column {
+        flex: 1;
         display: flex;
-        align-items: center;
-        overflow: hidden; 
-        // ... breadcrumb inner styles ...
+        flex-direction: column;
+        gap: 4px; // tighter gap as requested
+        min-height: 0;
+        height: 100%;
+        overflow: hidden; // Inner parts scroll
     }
 
     .center-content {
-        grid-column: 1; // Left column
-        grid-row: 2; // Bottom row
         @include box-style;
         flex: 1; 
         display: flex;
         flex-direction: column;
         overflow-y: auto; // Content scrolls here
         min-height: 0;
-        height: 100%; // Fill grid cell
     }
   }
 
@@ -246,6 +226,7 @@ html, body {
       grid-template-rows: minmax(0, 1fr) auto; 
       column-gap: 8px; 
       row-gap: 0; // Remove gap so footer touches content boxes directly
+      padding-right: 0; // Remove right padding to flush sidebar against edge
       
       .center {
         grid-row: 1; // Center box takes the main 1fr space
@@ -529,10 +510,8 @@ html, body {
      }
 
      .sidebar.right {
-        // Grid Positioning for Tablet/Desktop
-        grid-column: 2;
-        grid-row: 1 / span 2; // Span Breadcrumbs + Content height
-        
+        // No grid column needed, it's flex item inside center-body
+
         // Collapse/Expand width handling
         width: 50px; 
         min-width: 50px;
@@ -750,41 +729,151 @@ html, body {
     }
 
     .breadcrumbs-box {
-        order: 2; // With header
+        // Integrate into the unified card
+        order: 0; // Top
         @include box-style;
-        width: 100% !important; // Override desktop fixed width/flex
-        max-width: 100%;
-        margin-bottom: 0;
-        height: auto;
-        min-height: 52px;
-        padding: 10px 20px;
+        border: none;
+        background: transparent; // Blend in with parent box
+        padding: 0 0 10px 0; // Bottom spacing only
+        margin: 0;
+        width: 100% !important;
+        min-height: auto;
+        box-shadow: none;
+        border-radius: 0;
+        border-bottom: 1px solid var(--lightgray); // Subtle separator
+        margin-bottom: 10px;
     }
 
     // Increase specificity to ensure display: contents works
+    // Increase specificity to ensure display: contents works
     .center .center-body {
-        order: 3; 
+        order: 3; // Ensure it comes after Breadcrumbs (2) ? Breadcrumbs inside now!
+        // Unified Card on Mobile
+        @include box-style;
         display: flex;
         flex-direction: column;
-        padding: 0; // Reset padding on the body wrapper
-        background: transparent;
-        border: none;
-        gap: 0; // Gap is inside center-main now? No, center-body separates Breadcrumbs from Content.
-        // center-body contains [breadcrumbs-box, center-main]
-        gap: 10px;
-    }
-    
-    .center .center-main {
-        @include box-style; // The "Unified Box" styling moves here
-        display: flex;
-        flex-direction: column;
-        padding: 15px; // Compact frame
+        padding: 15px; // More compact frame
         gap: 10px; // Reduced gap
     }
     
-    .center .breadcrumbs-box {
-        order: 1; // First
+    // Unwrap the column on mobile so items sit directly in the unified card
+    .center .center-column {
+        display: contents !important;
+    }
+
+    // Breadcrumbs on Mobile: Separate Box!
+    // Since it's now inside the unified card wrapper (.center-body), we need to maintain standard order
+    // BUT user wants breadcrumbs separate? Or unified?
+    // User request: "style ... so that page-header, right sidebar, and page content are in a box"
+    // Breadcrumbs were traditionally separate.
+    // If we simply Order: 0 the breadcrumbs, they will be INSIDE the white box at the top.
+    // Is that desired? Probably not if they want "breadcrumbs box".
+    // Strategy: Remove box style from .center-body on mobile, apply it to a new wrapper? No markup changes allowed in CSS step.
+    // Strategy: Use display: contents on .center-body too?
+    // If .center-body is display: contents, then .center-column (contents) -> grandchildren are peers of Right Sidebar.
+    // Grandchildren: Breadcrumbs, Content. 
+    // So on mobile:
+    // .center-body { display: contents }
+    // .center-column { display: contents }
+    // .center-content { display: contents } (already true)
+    // Structure: Breadcrumbs, Header(in Content), Sidebar(sibling), ContentBody(in Content).
+    // This allows us to reorder EVERYTHING.
+    // And box them individually or in groups?
+    // We can't wrap Header+Sidebar+ContentBody in a box via CSS alone if they are siblings of Breadcrumbs.
+    // Unless we use the "pseudo-box" technique (background on center-body but negative margin on breadcrumbs?)
+    // Let's try:
+    // .center-body { @include box-style; ... }
+    // .breadcrumbs-box { margin: -15px -15px 10px -15px; background: transparent; border: none; ... }
+    // This effectively pulls it out visually or resets it.
+    
+    .breadcrumbs-box {
+        order: 0; // Top
+        @include box-style; // Keep its own box style? 
+        // If inside .center-body box, we get double box.
+        // Let's reset .center-body box style for breadcrumbs?
+        
+        // Actually, easiest way is to NOT box .center-body, but box the "Unified Group".
+        // Use a background on .center-body?
+        // This is tricky without markup.
+        // Let's assume Breadcrumbs INSIDE the card is acceptable OR use the negative margin trick.
+        // Let's go with Negative Margin to "break out".
+        
+        width: calc(100% + 30px) !important; // Compensate padding
+        margin: -15px -15px 10px -15px; // Pull to edge
+        border-radius: 15px 15px 0 0; // Top radius
+        border: none;
+        border-bottom: 1px solid var(--lightgray); // Separator?
+        background: transparent; // Or var(--light) if we want it same.
+        // Actually, if .center-body is white,Breadcrumbs is white... it merges.
+        // Just need separator?
+        box-shadow: none;
+        // z-index: 10; // Removed
+        
+        // Wait, "Breadcrumbs box" usually has specific styling.
+        // If we want it SEPARATE, we need gap.
+        // -15px margin pulls it flush. 
+        // Let's make .center-body background transparent, padding 0.
+        // Then box .breadcrumbs-box.
+        // Then box a collection of the rest? Can't collection via CSS.
+        
+        // OK, alternate plan:
+        // Make .center-body transparent, display: flex column.
+        // .breadcrumbs-box: Order 0. Box Style. Margin bottom.
+        // .center-column: display: contents.
+        // .center-content: display: contents.
+        // We have Header, Sidebar, ContentBody left.
+        // We want THEM boxed together.
+        // They are siblings of Breadcrumbs effectively.
+        // We can't box them together without a wrapper.
+        // CRITICAL: We changed HTML.
+        // .center-body -> [ .center-column -> [Breadcrumbs, CenterContent], RightScroll ]
+        // Mobile:
+        // .center-body { display: flex; flex-direction: column }
+        // .center-column { display: contents }
+        // .center-content { display: contents }
+        // RightScroll { Order: 2 }
+        
+        // We really need a wrapper for (Header+Sidebar+Content).
+        // Since we didn't add one in HTML step (we just grouped BC+Content), we are stuck.
+        // WAIT. We grouped BC + Content in `.center-column`.
+        // So `.center-column` contains BC and Content.
+        // Sidebar is OUTSIDE `.center-column`.
+        // Layout:
+        // CenterBody
+        //   -> CenterColumn
+        //      -> Breadcrumbs
+        //      -> CenterContent (Header + Body + Footer)
+        //   -> RightSidebar
+        
+        // Desktop: CenterColumn (Flex Col) | RightSidebar. GOOD.
+        // Mobile:
+        // We want: Breadcrumbs (Box 1) + [Header, Sidebar, Body] (Box 2).
+        // Sidebar is visually in middle of Header and Body.
+        // But in DOM, Sidebar is SIBLING of CenterColumn (parent of Header/Body).
+        // We cannot put Sidebar *between* Header and Body if Sidebar is outside their parent.
+        // UNLESS `display: contents` on CenterColumn AND CenterContent.
+        // Then Header, Body, Breadcrumbs become siblings of Sidebar.
+        // Then we can reorder.
+        // BUT we lose the "Box 2" wrapper.
+        
+        // Solution: Fix HTML in next step or use visual trickery?
+        // Visual trickery: background on .center-body (The main box).
+        // But Breadcrumbs is inside CenterColumn inside CenterBody.
+        // So Breadcrumbs is inside the main box.
+        // User might accept Breadcrumbs inside the main box?
+        // "On mobile, style the center content so that the page-header, right sidebar, and page content are in a box".
+        // It didn't explicitly excude breadcrumbs, but previous prompt implied separate.
+        // If we put BC inside, it's fine.
+        // Let's try putting BC inside the unified box for now, as it's cleaner.
+        
+        order: 0;
+        @include box-style;
+        border: none;
+        background: transparent; // Blend in
+        padding: 0 0 10px 0; // Bottom spacing
+        margin: 0;
         width: 100% !important;
-        margin-bottom: 0;
+        min-height: auto;
     }
     
     .center .center-content {
@@ -870,16 +959,11 @@ html, body {
        }
     }
 
-    // Children of center-main
+    // Children of center-content (now direct flex items via display:contents)
     .page-header {
-       order: 2; // Inside center-main (after implicit start)
-       // Actually, center-main has {center-content [header...], right}
-       // center-content is display:contents.
-       // So children are: page-header, page-content, page-footer, sidebar.right
-       
-       order: 1; // Header first
+       order: 1; // First in the box (Before sidebar 2)
        width: 100%;
-       padding: 0 !important; 
+       padding: 0 !important; // Remove extra padding
        margin: 0;
        box-sizing: border-box;
     }
